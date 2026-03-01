@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Garage Online - Venta de vehículos de alta gama">
+    <title>Garage Online | Tu Próximo Auto</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --dark-bg: #1a1a1a;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            padding-top: 56px;
+            background-color: #f8f9fa;
+        }
+
+        /* HEADER & HERO */
+        .hero-section {
+            height: 50vh;
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
+                        url('https://t4.ftcdn.net/jpg/02/82/00/75/360_F_282007508_wdCUP7hUMNK1Cuzj7XmOcFmzyzJ0Nnp9.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+        }
+
+        /* CARDS */
+        .card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: none;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        }
+
+        .card-img-top {
+            height: 220px;
+            object-fit: cover;
+            cursor: pointer;
+        }
+
+        .card-title {
+            height: 3rem;
+            overflow: hidden;
+            font-weight: 600;
+        }
+
+        /* BADGE & UI */
+        #cartCount { transition: transform 0.2s; }
+        .pulse { transform: scale(1.3); }
+
+        .modal-xl-img {
+            width: 100%;
+            max-height: 500px;
+            object-fit: contain;
+            background-color: #000;
+        }
+
+        footer { background-color: var(--dark-bg); }
+    </style>
+</head>
+<body>
+
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top shadow">
+            <div class="container">
+                <a class="navbar-brand fw-bold" href="#"><i class="fas fa-car me-2"></i>GarageOnline</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item"><a class="nav-link" href="#inicio">Inicio</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#vehiculos">Vehículos</a></li>
+                    </ul>
+                    <div class="d-flex align-items-center">
+                        <input class="form-control me-2" type="search" id="searchInput" placeholder="Buscar marca o modelo...">
+                        <button class="btn btn-outline-light position-relative" data-bs-toggle="modal" data-bs-target="#cartModal">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span id="cartCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">0</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div id="inicio" class="hero-section">
+            <div class="container">
+                <h1 class="display-3 fw-bold">Bienvenido a GarageOnline</h1>
+                <p class="lead">El catálogo digital de vehículos más avanzado.</p>
+                <a href="#vehiculos" class="btn btn-primary btn-lg px-5">Ver Inventario</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container my-5" id="vehiculos">
+        <h2 class="text-center mb-5 fw-bold">Nuestros Vehículos</h2>
+        
+        <div id="loadingSpinner" class="text-center my-5">
+            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
+            <p class="mt-2 text-muted">Cargando flota...</p>
+        </div>
+
+        <div class="row" id="productsContainer"></div>
+    </main>
+
+    <footer class="text-white text-center py-4 mt-5">
+        <p class="mb-0">© 2026 Garage Online - Proyecto Educativo | Todos los derechos reservados.</p>
+    </footer>
+
+    <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content" id="detailContent">
+                </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="quantityModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header"><h6>Cantidad</h6></div>
+                <div class="modal-body text-center">
+                    <input type="number" id="quantityInput" class="form-control text-center" value="1" min="1">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="confirmAddBtn" class="btn btn-primary w-100">Agregar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="cartModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title">Mi Carrito</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="cartItems"></div>
+                    <hr>
+                    <div class="text-end">
+                        <h4>Total: $<span id="cartTotal">0</span></h4>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#paymentModal">Continuar al Pago</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header"><h5>Simulación de Pago</h5></div>
+                <div class="modal-body">
+                    <form id="paymentForm">
+                        <div class="mb-3">
+                            <label class="form-label">Nombre del Titular</label>
+                            <input type="text" id="payName" class="form-control" placeholder="Juan Pérez" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Número de Tarjeta</label>
+                            <input type="text" class="form-control" placeholder="XXXX XXXX XXXX XXXX" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Fecha de Vencimiento</label>
+                                <input type="text" class="form-control" placeholder="MM/AA" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">CVV</label>
+                                <input type="text" class="form-control" placeholder="123" required>
+                            </div>
+                        </div>
+                        <button type="button" id="processPaymentBtn" class="btn btn-primary w-100 mt-3">Pagar y Generar Factura</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script>
+        let vehiclesData = [];
+        let cart = [];
+        let selectedVehicle = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            init();
+        });
+
+        async function init() {
+            await loadData();
+            setupSearch();
+            setupDelegation();
+            runTests();
+        }
+
+        async function loadData() {
+            try {
+                const response = await fetch('https://raw.githubusercontent.com/JUANCITOPENA/Pagina_Vehiculos_Ventas/refs/heads/main/vehiculos.json');
+                vehiclesData = await response.json();
+                renderVehicles(vehiclesData);
+            } catch (error) {
+                document.getElementById('productsContainer').innerHTML = `<div class="alert alert-danger">Error conectando con la base de datos JSON.</div>`;
+            } finally {
+                document.getElementById('loadingSpinner').style.display = 'none';
+            }
+        }
+
+        function renderVehicles(data) {
+            const container = document.getElementById('productsContainer');
+            container.innerHTML = data.map(v => `
+                <div class="col-md-4 col-sm-6 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <img src="${v.imagen}" class="card-img-top btn-detail" data-id="${v.codigo}" alt="${v.modelo}">
+                        <div class="card-body d-flex flex-column text-center">
+                            <h5 class="card-title">${v.marca} ${v.modelo}</h5>
+                            <p class="badge bg-secondary mb-2">${v.categoria}</p>
+                            <h4 class="text-primary fw-bold mt-auto mb-3">$${v.precio_venta.toLocaleString()}</h4>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-outline-primary btn-detail" data-id="${v.codigo}">Ver Detalle</button>
+                                <button class="btn btn-primary btn-buy" data-id="${v.codigo}">Añadir al Carrito</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function setupDelegation() {
+            document.getElementById('productsContainer').addEventListener('click', e => {
+                const id = parseInt(e.target.dataset.id);
+                if (e.target.classList.contains('btn-detail')) showDetail(id);
+                if (e.target.classList.contains('btn-buy')) {
+                    selectedVehicle = vehiclesData.find(v => v.codigo === id);
+                    new bootstrap.Modal(document.getElementById('quantityModal')).show();
+                }
+            });
+
+            document.getElementById('confirmAddBtn').addEventListener('click', () => {
+                const qty = parseInt(document.getElementById('quantityInput').value);
+                if (qty > 0) {
+                    addToCart(selectedVehicle, qty);
+                    bootstrap.Modal.getInstance(document.getElementById('quantityModal')).hide();
+                }
+            });
+
+            document.getElementById('processPaymentBtn').addEventListener('click', processPayment);
+        }
+
+        function showDetail(id) {
+            const v = vehiclesData.find(v => v.codigo === id);
+            const content = document.getElementById('detailContent');
+            content.innerHTML = `
+                <div class="modal-header">
+                    <h5 class="modal-title">${v.marca} ${v.modelo}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <img src="${v.imagen}" class="modal-xl-img">
+                    <div class="p-4">
+                        <p><strong>Categoría:</strong> ${v.categoria}</p>
+                        <p><strong>Descripción:</strong> Vehículo de alta gama garantizado por GarageOnline.</p>
+                        <h2 class="text-primary">$${v.precio_venta.toLocaleString()}</h2>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary btn-buy" data-id="${v.codigo}" data-bs-dismiss="modal">Comprar Ahora</button>
+                </div>
+            `;
+            new bootstrap.Modal(document.getElementById('detailModal')).show();
+        }
+
+        function setupSearch() {
+            document.getElementById('searchInput').addEventListener('input', e => {
+                const term = e.target.value.toLowerCase();
+                const filtered = vehiclesData.filter(v => 
+                    v.marca.toLowerCase().includes(term) || v.modelo.toLowerCase().includes(term)
+                );
+                renderVehicles(filtered);
+            });
+        }
+
+        function addToCart(vehicle, qty) {
+            const index = cart.findIndex(c => c.codigo === vehicle.codigo);
+            if (index !== -1) cart[index].qty += qty;
+            else cart.push({...vehicle, qty});
+            
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            const container = document.getElementById('cartItems');
+            let total = 0;
+            let count = 0;
+
+            container.innerHTML = cart.map(item => {
+                const sub = item.precio_venta * item.qty;
+                total += sub;
+                count += item.qty;
+                return `
+                    <div class="d-flex align-items-center mb-3 border-bottom pb-2">
+                        <img src="${item.imagen}" width="60" class="rounded me-3">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0">${item.marca} ${item.modelo}</h6>
+                            <small>${item.qty} x $${item.precio_venta.toLocaleString()}</small>
+                        </div>
+                        <div class="fw-bold">$${sub.toLocaleString()}</div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('cartTotal').innerText = total.toLocaleString();
+            document.getElementById('cartCount').innerText = count;
+            
+            const badge = document.getElementById('cartCount');
+            badge.classList.add('pulse');
+            setTimeout(() => badge.classList.remove('pulse'), 200);
+        }
+
+        function processPayment() {
+            const name = document.getElementById('payName').value;
+            if(!name) return alert("Ingrese un nombre");
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFontSize(20);
+            doc.text("RECIBO DE COMPRA - GARAGE ONLINE", 10, 20);
+            doc.setFontSize(12);
+            doc.text(`Cliente: ${name}`, 10, 40);
+            doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 10, 50);
+            
+            let y = 70;
+            cart.forEach(i => {
+                doc.text(`${i.marca} ${i.modelo} (x${i.qty}) - $${(i.precio_venta * i.qty).toLocaleString()}`, 10, y);
+                y += 10;
+            });
+            
+            doc.text(`TOTAL FINAL: $${document.getElementById('cartTotal').innerText}`, 10, y + 10);
+            doc.save(`Factura_Garage_${Date.now()}.pdf`);
+
+            alert("Pago procesado con éxito. Su factura ha sido generada.");
+            cart = [];
+            updateCartUI();
+            bootstrap.Modal.getInstance(document.getElementById('paymentModal')).hide();
+        }
+
+        function runTests() {
+            console.log("--- TEST AUTOMÁTICO ---");
+            setTimeout(() => {
+                console.log(vehiclesData.length > 0 ? "✅ Datos JSON cargados" : "❌ Datos JSON vacíos");
+                console.log(document.querySelectorAll('.card').length > 0 ? "✅ Interfaz renderizada" : "❌ Error en renderizado");
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
